@@ -1,6 +1,19 @@
 version: clickhouse.airfold.co/v1
 type: Pipe
 description: ''
+params:
+  - name: product_id
+    type: string
+    description: 'Filter by specific product_id'
+    default: ''
+  - name: start_date
+    type: datetime
+    description: 'Start date in YYYY-MM-DD format'
+    default: ''
+  - name: end_date
+    type: datetime
+    description: 'End date in YYYY-MM-DD format'
+    default: ''
 nodes:
   - events_per_user_id_per_product:
       sql: |-
@@ -9,10 +22,12 @@ nodes:
           event_type,
           product_id,
           COUNT(*) AS num_events
-
         FROM
           events
-
+        WHERE
+          ({{ product_id | default('') }} = '' OR product_id = {{ product_id }})
+          AND ({{ start_date | default('') }} = '' OR timestamp >= toDateTime({{ start_date }}))
+          AND ({{ end_date | default('') }} = '' OR timestamp <= toDateTime({{ end_date }}))
         GROUP BY user_id, event_type, product_id
   - events_per_product:
       sql: |-
