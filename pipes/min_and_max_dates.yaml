@@ -1,0 +1,12 @@
+version: clickhouse.airfold.co/v1
+type: Pipe
+description: ''
+nodes:
+  - min_and_max_date:
+      sql: |-
+        SELECT
+          toDate(min(timestamp)) AS min_date,
+          toDate(max(timestamp)) AS max_date
+        FROM
+          events
+publish: min_and_max_dates

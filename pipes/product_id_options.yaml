@@ -1,0 +1,12 @@
+version: clickhouse.airfold.co/v1
+type: Pipe
+description: ''
+nodes:
+  - Distinct Product Ids:
+      sql: |-
+        SELECT
+          DISTINCT(product_id)
+        FROM
+          events
+        ORDER BY CAST(product_id AS UInt8);
+publish: product_id_options
