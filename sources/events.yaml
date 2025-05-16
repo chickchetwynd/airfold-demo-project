@@ -1,0 +1,11 @@
+name: events
+description: Event logs for an imaginary webpage
+cols:
+  user_id: LowCardinality(String)
+  event_type: Enum8('page_view' = 1, 'add_to_cart' = 2, 'purchase' = 3)
+  page: String
+  product_id: LowCardinality(String)
+  timestamp: DateTime
+settings:
+  engine: MergeTree()
+  order_by: "`timestamp`"
