@@ -1,0 +1,52 @@
+version: clickhouse.airfold.co/v1
+type: Pipe
+description: ''
+nodes:
+  - events_per_user_id_per_product:
+      sql: |-
+        SELECT
+          user_id,
+          event_type,
+          product_id,
+          COUNT(*) AS num_events
+
+        FROM
+          events
+
+        GROUP BY user_id, event_type, product_id
+  - events_per_product:
+      sql: |-
+        SELECT
+          product_id,
+          event_type,
+          SUM(num_events) AS num_events
+
+        FROM
+          events_per_user_id_per_product
+
+        GROUP BY   product_id, event_type
+
+        ORDER BY product_id;
+  - pivoted_events:
+      sql: |-
+        SELECT
+            product_id,
+            SUM(CASE WHEN event_type = 'page_view' THEN num_events ELSE 0 END) AS num_page_views,
+            SUM(CASE WHEN event_type = 'add_to_cart' THEN num_events ELSE 0 END) AS num_add_to_cart,
+            SUM(CASE WHEN event_type = 'purchase' THEN num_events ELSE 0 END) AS num_purchase
+
+        FROM
+          events_per_product
+
+        GROUP BY product_id
+  - conversion_rates:
+      sql: |-
+        SELECT
+          product_id,
+          ROUND((num_add_to_cart/num_page_views) * 100, 2) AS view_to_cart_conversion_rate,
+          ROUND((num_purchase/num_add_to_cart) * 100, 2) AS cart_to_purchase_conversion_rate,
+          ROUND((num_purchase/num_page_views) * 100, 2) AS view_to_purchase_conversion_rate
+
+        FROM
+          pivoted_events
+publish: product_conversion_metrics
